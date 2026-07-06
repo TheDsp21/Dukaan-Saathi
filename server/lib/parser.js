@@ -12,6 +12,7 @@ const INTENTS = [
   "query_money_today",
   "query_expenses",
   "query_dues",
+  "query_customer_dues",
   "query_stock",
   "query_sales",
   "day_report",
@@ -65,7 +66,8 @@ Guidance:
 - Questions like "today's profit / aaj ka munafa / ఈ రోజు లాభం" => query_profit.
 - "how much money came today / kitne paise aaye / ఈ రోజు ఎంత డబ్బు" => query_money_today.
 - "how much did I spend today / aaj kitna kharch hua / ఈ రోజు ఎంత ఖర్చు" => query_expenses.
-- "who owes me / kaun kaun ka udhaar / ఎవరు బాకీ" => query_dues.
+- "who owes me / kaun kaun ka udhaar / ఎవరు బాకీ" => query_dues (everyone).
+- Dues for ONE named person: "how much does Ramesh owe / Ramesh ka udhaar kitna / Ramesh kitna baaki / రమేష్ బాకీ ఎంత" => query_customer_dues with party_name set to that person.
 - "what's low / kya khatam / తక్కువగా ఏమి ఉంది" => query_stock.
 - "today's sales / aaj ki bikri" => query_sales.
 - A full end-of-day summary: "day report / aaj ka hisab / poora hisab / ఈ రోజు హిసాబు / రిపోర్ట్" => day_report.
@@ -199,6 +201,10 @@ function mockParse(text, ctx) {
 
   if (has(t, KW.profit)) return { ...base, intent: "query_profit" };
   if (has(t, KW.money)) return { ...base, intent: "query_money_today" };
+  // A dues question that names ONE person → that customer's balance.
+  // Must be a pure question (no amount, not a repayment) so we don't swallow sales.
+  if ((has(t, KW.dues) || has(t, KW.duesQ)) && party && !has(t, KW.paid) && !numbers.length)
+    return { ...base, intent: "query_customer_dues", party_name: party };
   // A dues *question*: explicit question words, or a bare "udhaar?" with no amount.
   if (has(t, KW.duesQ) || (has(t, KW.dues) && !numbers.length))
     return { ...base, intent: "query_dues" };

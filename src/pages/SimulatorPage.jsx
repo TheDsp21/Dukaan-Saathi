@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "motion/react";
 import { Send, Mic, Square, ArrowLeft, LayoutDashboard } from "lucide-react";
 import { api } from "../lib/api";
-import { useAuth } from "../lib/auth.jsx";
+import { useAuth } from "../lib/auth-context.js";
 import LanguageSwitcher from "../components/LanguageSwitcher";
 import { TypingDots } from "../components/ui";
 
@@ -85,7 +85,7 @@ export default function SimulatorPage() {
     setRecording(false);
   };
 
-  const samples = ["sale", "udhaar", "profit", "money", "dues", "stock"];
+  const samples = ["sale", "udhaar", "profit", "money", "dues", "custDues", "stock"];
 
   return (
     <div className="min-h-screen bg-paper-deep/40 font-body text-ink">

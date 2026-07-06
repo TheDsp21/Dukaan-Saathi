@@ -2,6 +2,7 @@ import { db, normalize } from "../db.js";
 import {
   todaySummary,
   totalDues,
+  customerDues,
   lowStock,
   todayExpenses,
   bestSellerToday,
@@ -35,6 +36,8 @@ export function executeIntent(parsed, shop) {
       return { replyKey: "expenses_report", data: todayExpenses(shopId) };
     case "query_dues":
       return { replyKey: "dues_report", data: totalDues(shopId) };
+    case "query_customer_dues":
+      return { replyKey: "customer_dues_report", data: customerDues(shopId, parsed.party_name) };
     case "query_stock":
       return { replyKey: "stock_report", data: { items: lowStock(shopId) } };
     case "query_sales": {

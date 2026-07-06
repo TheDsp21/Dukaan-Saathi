@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Store, ArrowLeft } from "lucide-react";
 import { api } from "../lib/api";
-import { useAuth } from "../lib/auth.jsx";
+import { useAuth } from "../lib/auth-context.js";
 import LanguageSwitcher from "../components/LanguageSwitcher";
 
 export default function LoginPage() {

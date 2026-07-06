@@ -23,6 +23,8 @@ const messages = [
   "aaj ka profit kitna hua",
   "kitne paise aaye aaj",
   "kaun kaun ka udhaar baaki hai",
+  "Ramesh ka udhaar kitna hai",
+  "Suresh ka udhaar kitna hai",
   "क्या क्या खतम हो रहा है",
   "ఈ రోజు అమ్మకాలు ఎంత",
   "aaj ka hisab",

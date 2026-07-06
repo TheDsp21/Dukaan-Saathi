@@ -10,7 +10,7 @@ import {
   ResponsiveContainer, BarChart, Bar, XAxis, Tooltip, CartesianGrid, Cell,
 } from "recharts";
 import { api } from "../lib/api";
-import { useAuth } from "../lib/auth.jsx";
+import { useAuth } from "../lib/auth-context.js";
 import LanguageSwitcher from "../components/LanguageSwitcher";
 
 const money = (n) => "₹" + Math.round(Number(n) || 0).toLocaleString("en-IN");

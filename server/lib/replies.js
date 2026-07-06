@@ -169,6 +169,33 @@ const T = {
           d.customers.slice(0, 5).map((c) => `• ${c.name} — ${money(c.outstanding)}`).join("\n"),
   },
 
+  customer_dues_report: {
+    en: (d) =>
+      d.status === "no_name"
+        ? "Whose udhaar do you want to check? Please tell me the customer's name."
+        : d.status === "not_found"
+          ? `🤔 I don't have a customer named "${d.name}" yet.`
+          : d.status === "clear"
+            ? `🎉 ${d.name} has no udhaar pending. All clear!`
+            : `🧾 ${d.name}'s pending udhaar: ${money(d.outstanding)}.`,
+    hi: (d) =>
+      d.status === "no_name"
+        ? "किसका उधार देखना है? कृपया ग्राहक का नाम बताइए।"
+        : d.status === "not_found"
+          ? `🤔 "${d.name}" नाम का कोई ग्राहक अभी नहीं है।`
+          : d.status === "clear"
+            ? `🎉 ${d.name} का कोई उधार बाकी नहीं। सब क्लियर!`
+            : `🧾 ${d.name} का बकाया उधार: ${money(d.outstanding)}।`,
+    te: (d) =>
+      d.status === "no_name"
+        ? "ఎవరి ఉధార్ చూడాలి? దయచేసి వినియోగదారు పేరు చెప్పండి."
+        : d.status === "not_found"
+          ? `🤔 "${d.name}" పేరుతో వినియోగదారు ఇంకా లేరు.`
+          : d.status === "clear"
+            ? `🎉 ${d.name}కి ఏ ఉధార్ బాకీ లేదు. అంతా క్లియర్!`
+            : `🧾 ${d.name} బాకీ ఉధార్: ${money(d.outstanding)}.`,
+  },
+
   stock_report: {
     en: (d) =>
       d.items.length === 0

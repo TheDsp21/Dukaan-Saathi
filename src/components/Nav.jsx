@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Menu, X } from "lucide-react";
-import { useAuth } from "../lib/auth.jsx";
+import { useAuth } from "../lib/auth-context.js";
 import LanguageSwitcher from "./LanguageSwitcher";
 
 export default function Nav() {

@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { AnimatePresence, motion } from "motion/react";
 import { Monitor, TrendingUp, Package, Users, ArrowRight } from "lucide-react";
 import { Section, Reveal } from "./ui";
-import { useAuth } from "../lib/auth.jsx";
+import { useAuth } from "../lib/auth-context.js";
 
 export default function DashboardToggle() {
   const { t } = useTranslation();

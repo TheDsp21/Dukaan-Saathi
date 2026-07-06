@@ -1,6 +1,6 @@
 import "./App.css";
 import { Routes, Route, Navigate } from "react-router-dom";
-import { useAuth } from "./lib/auth.jsx";
+import { useAuth } from "./lib/auth-context.js";
 import MarketingPage from "./pages/MarketingPage";
 import SimulatorPage from "./pages/SimulatorPage";
 import LoginPage from "./pages/LoginPage";

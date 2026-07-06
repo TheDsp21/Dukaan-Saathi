@@ -1,7 +1,7 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { getToken, setToken, clearToken } from "./api";
+import { AuthCtx } from "./auth-context.js";
 
-const AuthCtx = createContext(null);
 const SHOP_KEY = "dukaan_shop";
 
 export function AuthProvider({ children }) {
@@ -36,5 +36,3 @@ export function AuthProvider({ children }) {
     </AuthCtx.Provider>
   );
 }
-
-export const useAuth = () => useContext(AuthCtx);

@@ -1,4 +1,4 @@
-import { db } from "../db.js";
+import { db, normalize } from "../db.js";
 
 /* All queries are scoped by shop_id. Timestamps are stored UTC; we compare in
    local time so "today" matches the shopkeeper's day. */
@@ -96,6 +96,37 @@ export function totalDues(shopId) {
     total: rows.reduce((s, r) => s + r.outstanding, 0),
     customers: rows,
   };
+}
+
+/* Outstanding udhaar for one named customer.
+   Matches on the normalized name (exact first, then a loose contains match so
+   "ramesh kumar" resolves from "ramesh"). Returns:
+     { status: "found",     name, outstanding }  — a known customer
+     { status: "clear",     name, outstanding }  — known, but nothing pending
+     { status: "not_found", name }               — no such customer
+     { status: "no_name" }                        — the message had no name */
+export function customerDues(shopId, name) {
+  const query = (name || "").trim();
+  if (!query) return { status: "no_name" };
+
+  const norm = normalize(query);
+  const rows = dues(shopId); // only customers with outstanding > 0
+  const all = db
+    .prepare("SELECT name, name_norm FROM customers WHERE shop_id = ?")
+    .all(shopId);
+
+  const match =
+    rows.find((r) => normalize(r.name) === norm) ||
+    rows.find((r) => normalize(r.name).includes(norm) || norm.includes(normalize(r.name)));
+  if (match) return { status: "found", name: match.name, outstanding: match.outstanding };
+
+  // No outstanding dues, but do we even know this customer?
+  const known =
+    all.find((c) => c.name_norm === norm) ||
+    all.find((c) => c.name_norm.includes(norm) || norm.includes(c.name_norm));
+  if (known) return { status: "clear", name: known.name, outstanding: 0 };
+
+  return { status: "not_found", name: query };
 }
 
 export function productsSoldToday(shopId) {
