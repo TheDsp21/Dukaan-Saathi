@@ -6,10 +6,11 @@ import { useNavigate } from "react-router-dom";
 export default function SplashPage() {
   const [step, setStep] = useState(0);
   const navigate = useNavigate();
+  const splashKey = "dukaan_splash_seen_v2";
 
   useEffect(() => {
-    // Check if user has already seen splash
-    if (localStorage.getItem("dukaan_splash_seen")) {
+    // Check if user has already seen the updated splash sequence
+    if (localStorage.getItem(splashKey) === "true") {
       navigate("/onboarding", { replace: true });
       return;
     }
@@ -33,7 +34,7 @@ export default function SplashPage() {
   }, [navigate]);
 
   const handleFinish = () => {
-    localStorage.setItem("dukaan_splash_seen", "true");
+    localStorage.setItem(splashKey, "true");
     navigate("/onboarding");
   };
 
