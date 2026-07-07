@@ -15,53 +15,56 @@ const undoWord = (type, lang) =>
 const T = {
   onboarding: {
     en: () =>
-      "👋 Namaste! I'm Dukaan Saathi. Just tell me your sales, udhaar or stock by text or voice — in English, Hindi or Telugu. Try: \"2 kg rice 100 rupees cash\".",
+      "👋 Namaste! I'm Dukaan Saathi, your shop's AI partner. Just talk to me the way you'd tell a helper — a sale, an udhaar, a new stock arrival, or a question like \"how much profit today?\". Voice or text, in English, Hindi or Telugu. Try: \"Sold 2 kg rice for 100 rupees cash\".",
     hi: () =>
-      "👋 नमस्ते! मैं दुकान साथी हूँ। अपनी बिक्री, उधार या स्टॉक बस बोलकर या लिखकर बताइए — हिंदी, अंग्रेज़ी या तेलुगु में। जैसे: \"2 किलो चावल 100 रुपये नकद\"।",
+      "👋 नमस्ते! मैं दुकान साथी हूँ — आपकी दुकान का AI पार्टनर। जैसे किसी मददगार को बताते हैं, वैसे मुझे बताइए — बिक्री, उधार, नया स्टॉक, या सवाल जैसे \"आज कितना मुनाफ़ा?\"। बोलकर या लिखकर, हिंदी/अंग्रेज़ी/तेलुगु में। जैसे: \"2 किलो चावल 100 रुपये नकद बेचे\"।",
     te: () =>
-      "👋 నమస్తే! నేను దుకాన్ సాథి. మీ అమ్మకాలు, ఉధార్ లేదా స్టాక్‌ను టెక్స్ట్ లేదా వాయిస్‌తో చెప్పండి — తెలుగు, హిందీ లేదా ఇంగ్లీష్‌లో. ఉదా: \"2 కిలో బియ్యం 100 రూపాయలు నగదు\".",
+      "👋 నమస్తే! నేను దుకాన్ సాథి — మీ దుకాణం AI భాగస్వామి. ఒక సహాయకుడికి చెప్పినట్టే నాకు చెప్పండి — అమ్మకం, ఉధార్, కొత్త స్టాక్, లేదా \"ఈ రోజు లాభం ఎంత?\" లాంటి ప్రశ్న. వాయిస్ లేదా టెక్స్ట్, తెలుగు/హిందీ/ఇంగ్లీష్‌లో. ఉదా: \"2 కిలో బియ్యం 100 రూపాయలకు అమ్మాను\".",
   },
 
   sale_logged: {
     en: (d) =>
-      `✅ Sale logged: ${qtyUnit(d.qty, d.unit)} ${d.item} → ${money(d.amount)}` +
+      `✅ Logged: ${qtyUnit(d.qty, d.unit)} ${d.item} for ${money(d.amount)}` +
       (d.payment_type === "udhaar"
-        ? ` on ${d.party}'s udhaar. Total due: ${money(d.newDue)}.`
-        : " (cash)."),
+        ? ` (${d.party}'s udhaar, total due: ${money(d.newDue)}).`
+        : " (Cash)."),
     hi: (d) =>
-      `✅ बिक्री दर्ज: ${qtyUnit(d.qty, d.unit)} ${d.item} → ${money(d.amount)}` +
+      `✅ दर्ज किया: ${qtyUnit(d.qty, d.unit)} ${d.item} ${money(d.amount)} में` +
       (d.payment_type === "udhaar"
-        ? `, ${d.party} के उधार में जुड़ा। कुल बकाया: ${money(d.newDue)}।`
+        ? ` (${d.party} का उधार, कुल बाकी: ${money(d.newDue)})।`
         : " (नकद)।"),
     te: (d) =>
-      `✅ అమ్మకం నమోదైంది: ${qtyUnit(d.qty, d.unit)} ${d.item} → ${money(d.amount)}` +
+      `✅ నమోదైంది: ${qtyUnit(d.qty, d.unit)} ${d.item} ${money(d.amount)}కి` +
       (d.payment_type === "udhaar"
-        ? `, ${d.party} ఉధార్‌లో చేర్చబడింది. మొత్తం బాకీ: ${money(d.newDue)}.`
+        ? ` (${d.party} ఉధార్, మొత్తం బాకీ: ${money(d.newDue)}).`
         : " (నగదు)."),
   },
 
   restocked: {
     en: (d) =>
-      `📦 Stock updated: added ${qtyUnit(d.qty, d.unit)} ${d.item}. Now in stock: ${qtyUnit(d.newStock, d.unit)}.`,
+      `📦 Got it — added ${qtyUnit(d.qty, d.unit)} ${d.item} to your stock. You now have ${qtyUnit(d.newStock, d.unit)} on the shelf.`,
     hi: (d) =>
-      `📦 स्टॉक अपडेट: ${qtyUnit(d.qty, d.unit)} ${d.item} जोड़ा। अब स्टॉक में: ${qtyUnit(d.newStock, d.unit)}।`,
+      `📦 हो गया — ${qtyUnit(d.qty, d.unit)} ${d.item} स्टॉक में जोड़ा। अब आपके पास ${qtyUnit(d.newStock, d.unit)} है।`,
     te: (d) =>
-      `📦 స్టాక్ నవీకరించబడింది: ${qtyUnit(d.qty, d.unit)} ${d.item} చేర్చబడింది. ఇప్పుడు స్టాక్‌లో: ${qtyUnit(d.newStock, d.unit)}.`,
+      `📦 అయిపోయింది — ${qtyUnit(d.qty, d.unit)} ${d.item} స్టాక్‌లో చేర్చాను. ఇప్పుడు మీ దగ్గర ${qtyUnit(d.newStock, d.unit)} ఉంది.`,
   },
 
   payment_recorded: {
     en: (d) =>
-      `🧾 Got it. ${d.party} paid ${money(d.amount)}. Remaining due: ${money(d.remaining)}.`,
+      `✅ Noted: ${d.party} paid ${money(d.amount)}. ` +
+      (d.remaining > 0 ? `Remaining udhaar: ${money(d.remaining)}.` : `Account clear! 🎉`),
     hi: (d) =>
-      `🧾 ठीक है। ${d.party} ने ${money(d.amount)} चुकाए। बाकी बकाया: ${money(d.remaining)}।`,
+      `✅ दर्ज किया: ${d.party} ने ${money(d.amount)} दिए। ` +
+      (d.remaining > 0 ? `बाकी उधार: ${money(d.remaining)}।` : `खाता साफ़! 🎉`),
     te: (d) =>
-      `🧾 సరే. ${d.party} ${money(d.amount)} చెల్లించారు. మిగిలిన బాకీ: ${money(d.remaining)}.`,
+      `✅ నమోదైంది: ${d.party} ${money(d.amount)} చెల్లించారు. ` +
+      (d.remaining > 0 ? `మిగిలిన ఉధార్: ${money(d.remaining)}.` : `ఖాతా క్లియర్! 🎉`),
   },
 
   product_added: {
-    en: (d) => `🆕 Added "${d.item}" to your products.`,
-    hi: (d) => `🆕 "${d.item}" आपके प्रोडक्ट में जुड़ गया।`,
-    te: (d) => `🆕 "${d.item}" మీ ఉత్పత్తులలో చేర్చబడింది.`,
+    en: (d) => `🆕 Great — I've added "${d.item}" to your products. You can start logging sales for it right away.`,
+    hi: (d) => `🆕 बढ़िया — "${d.item}" आपके प्रोडक्ट में जुड़ गया। अब इसकी बिक्री दर्ज कर सकते हैं।`,
+    te: (d) => `🆕 బాగుంది — "${d.item}" మీ ఉత్పత్తులలో చేర్చాను. ఇప్పుడే దీని అమ్మకాలు నమోదు చేయవచ్చు.`,
   },
 
   profit_report: {
@@ -74,12 +77,9 @@ const T = {
   },
 
   expense_logged: {
-    en: (d) =>
-      `🧾 Expense noted: ${money(d.amount)} for ${d.category}. Today's expenses: ${money(d.totalToday)}. Net profit now: ${money(d.netProfit)}.`,
-    hi: (d) =>
-      `🧾 खर्च दर्ज: ${d.category} के लिए ${money(d.amount)}। आज का कुल खर्च: ${money(d.totalToday)}। अब शुद्ध मुनाफ़ा: ${money(d.netProfit)}।`,
-    te: (d) =>
-      `🧾 ఖర్చు నమోదైంది: ${d.category} కోసం ${money(d.amount)}. ఈ రోజు ఖర్చులు: ${money(d.totalToday)}. ఇప్పుడు నికర లాభం: ${money(d.netProfit)}.`,
+    en: (d) => `✅ Expense noted: ${money(d.amount)} for ${d.category}.`,
+    hi: (d) => `✅ खर्च दर्ज: ${d.category} के लिए ${money(d.amount)}।`,
+    te: (d) => `✅ ఖర్చు నమోదైంది: ${d.category} కోసం ${money(d.amount)}.`,
   },
 
   expenses_report: {

@@ -36,27 +36,25 @@ export function Eyebrow({ children, className = "" }) {
   );
 }
 
-/* The physical phone shell used by the hero + how-it-works mockups. */
+/* The premium chat widget shell used in mockups. */
 export function PhoneShell({ children, className = "" }) {
   return (
     <div
-      className={`relative w-full max-w-[300px] rounded-[2.4rem] border-[10px] border-shopfront bg-shopfront p-0 shadow-[var(--shadow-phone)] ${className}`}
+      className={`relative w-full max-w-[340px] overflow-hidden rounded-[2rem] border border-black/5 bg-paper shadow-2xl ring-1 ring-black/5 ${className}`}
     >
-      {/* speaker notch */}
-      <div className="absolute left-1/2 top-2 z-20 h-1.5 w-16 -translate-x-1/2 rounded-full bg-white/20" />
-      <div className="relative h-[560px] overflow-hidden rounded-[1.7rem] bg-[#0b141a]">
-        {/* WhatsApp-style top bar */}
-        <div className="flex items-center gap-3 bg-shopfront-700 px-4 py-3">
-          <div className="grid h-9 w-9 place-items-center rounded-full bg-marigold text-sm font-bold text-shopfront">
-            दु
-          </div>
-          <div className="leading-tight">
-            <p className="font-sans text-sm font-semibold text-paper">
-              Dukaan Saathi
-            </p>
-            <p className="text-[11px] text-leaf">● online</p>
-          </div>
+      <div className="flex items-center gap-3 bg-white px-4 py-3 shadow-sm border-b border-black/5">
+        <div className="relative grid h-9 w-9 place-items-center rounded-full bg-shopfront text-sm font-bold text-marigold">
+          दु
+          <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-white bg-leaf"></span>
         </div>
+        <div className="leading-tight">
+          <p className="font-sans text-sm font-semibold text-shopfront">
+            Dukaan Saathi AI
+          </p>
+          <p className="text-[11px] font-medium text-leaf">● Online</p>
+        </div>
+      </div>
+      <div className="relative h-[500px] bg-paper-deep/30">
         {children}
       </div>
     </div>
@@ -69,10 +67,10 @@ export function Bubble({ side = "in", children, className = "" }) {
   return (
     <div className={`flex ${isOut ? "justify-end" : "justify-start"}`}>
       <div
-        className={`max-w-[82%] rounded-2xl px-3.5 py-2.5 text-[13px] leading-snug shadow-sm ${
+        className={`max-w-[82%] rounded-2xl px-3.5 py-2.5 text-[13px] leading-snug shadow-sm ring-1 ring-black/5 ${
           isOut
-            ? "rounded-br-md bg-[#005c4b] text-paper"
-            : "rounded-bl-md bg-white text-ink"
+            ? "rounded-br-sm bg-shopfront text-paper"
+            : "rounded-bl-sm bg-white text-ink"
         } ${className}`}
       >
         {children}
@@ -87,13 +85,13 @@ export function VoiceNote({ side = "out", duration = "0:06" }) {
   return (
     <div className={`flex ${isOut ? "justify-end" : "justify-start"}`}>
       <div
-        className={`flex max-w-[82%] items-center gap-2.5 rounded-2xl px-3 py-2.5 ${
-          isOut ? "rounded-br-md bg-[#005c4b]" : "rounded-bl-md bg-white"
+        className={`flex max-w-[82%] items-center gap-2.5 rounded-2xl px-3 py-2.5 shadow-sm ${
+          isOut ? "rounded-br-sm bg-shopfront" : "rounded-bl-sm bg-white"
         }`}
       >
-        <Mic className={`h-4 w-4 ${isOut ? "text-marigold" : "text-terracotta"}`} />
+        <Mic className={`h-4 w-4 ${isOut ? "text-leaf" : "text-terracotta"}`} />
         <Waveform tone={isOut ? "light" : "dark"} />
-        <span className={`text-[11px] ${isOut ? "text-paper/70" : "text-ink/50"}`}>
+        <span className={`text-[11px] font-medium ${isOut ? "text-paper/70" : "text-ink/50"}`}>
           {duration}
         </span>
       </div>
@@ -131,6 +129,12 @@ export function TypingDots() {
       ))}
     </div>
   );
+}
+
+/* Shimmer skeleton block — for loading states that should feel premium, not
+   blank. Compose freely: <Skeleton className="h-8 w-32 rounded-lg" /> */
+export function Skeleton({ className = "" }) {
+  return <div className={`skeleton rounded-md ${className}`} />;
 }
 
 /* A tidy "structured result" card the AI emits after parsing input. */

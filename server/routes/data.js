@@ -10,6 +10,7 @@ import {
   bestSellerToday,
   todayExpenses,
   last7Days,
+  businessHealth,
 } from "../lib/queries.js";
 import { executeIntent } from "../lib/intents.js";
 import { seedDemoData, clearShopData } from "../lib/seed.js";
@@ -21,7 +22,7 @@ dataRouter.use(requireAuth);
 /* Everything the dashboard needs in one call. */
 dataRouter.get("/dashboard", async (req, res) => {
   const shopId = req.shop.id;
-  const [summary, sales, inv, duesData, productsSold, itemProfit, bestSeller, expenses, trend] =
+  const [summary, sales, inv, duesData, productsSold, itemProfit, bestSeller, expenses, trend, health] =
     await Promise.all([
       todaySummary(shopId),
       salesFeed(shopId, 25),
@@ -32,6 +33,7 @@ dataRouter.get("/dashboard", async (req, res) => {
       bestSellerToday(shopId),
       todayExpenses(shopId),
       last7Days(shopId),
+      businessHealth(shopId),
     ]);
   res.json({
     shop: {
@@ -49,6 +51,7 @@ dataRouter.get("/dashboard", async (req, res) => {
     bestSeller,
     expenses,
     trend,
+    health,
   });
 });
 

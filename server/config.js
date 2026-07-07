@@ -8,7 +8,10 @@ export const config = {
 
   anthropic: {
     apiKey: process.env.ANTHROPIC_API_KEY || "",
-    model: process.env.CLAUDE_MODEL || "claude-sonnet-5",
+    // Model is configuration, never hard-coded logic. Override with CLAUDE_MODEL
+    // to move to a newer model without a code change. The default is a real,
+    // currently-supported Anthropic model id.
+    model: process.env.CLAUDE_MODEL || "claude-sonnet-4-6",
   },
 
   // Turso / libSQL. When the URL is unset we fall back to a local SQLite file
@@ -23,20 +26,14 @@ export const config = {
     model: process.env.SARVAM_STT_MODEL || "saarika:v2.5",
     url: process.env.SARVAM_STT_URL || "https://api.sarvam.ai/speech-to-text",
   },
-
-  twilio: {
-    accountSid: process.env.TWILIO_ACCOUNT_SID || "",
-    authToken: process.env.TWILIO_AUTH_TOKEN || "",
-    from: process.env.TWILIO_WHATSAPP_FROM || "",
-  },
 };
 
 /* A usable Anthropic key is a real API key ("sk-ant-api…"). OAuth / gateway
    tokens — e.g. the Claude Code client's "sk-ant-oat…" or "fe_oa_…" — are
    rejected by the Messages API with 403, so treat them as "no key" and fall
-   back to the rule-based parser instead of failing a call on every message.
-   (If you proxy through a custom gateway, set ANTHROPIC_API_KEY to a real
-   sk-ant-api key or relax this check.) */
+   back to the rule-based parser ("Demo AI Mode") instead of failing a call on
+   every message. (If you proxy through a custom gateway, set ANTHROPIC_API_KEY
+   to a real sk-ant-api key or relax this check.) */
 function usableAnthropicKey(key) {
   return (key || "").startsWith("sk-ant-api");
 }
@@ -44,26 +41,27 @@ function usableAnthropicKey(key) {
 export const flags = {
   hasClaude: usableAnthropicKey(config.anthropic.apiKey),
   hasSarvam: Boolean(config.sarvam.apiKey),
-  hasTwilio: Boolean(config.twilio.accountSid && config.twilio.authToken),
-  // Verify Twilio's request signature on the webhook. Off by default so the
-  // demo works without credentials; turn on in production (needs a public URL).
-  validateTwilioSignature: process.env.VALIDATE_TWILIO_SIGNATURE === "true",
 };
+
+/* Human-readable reason the AI is in demo mode, for developer logs only —
+   never surfaced to end users (which would leak configuration details). */
+export function aiConfigDiagnostic() {
+  const key = config.anthropic.apiKey;
+  if (!key) return "ANTHROPIC_API_KEY not set";
+  if (!usableAnthropicKey(key)) return "ANTHROPIC_API_KEY is not a usable sk-ant-api key (OAuth/gateway tokens are rejected)";
+  return null;
+}
 
 export function logStartupFlags() {
   console.log("  Dukaan Saathi backend — integration status:");
   console.log(
-    `   • Claude parsing : ${flags.hasClaude ? "ON (" + config.anthropic.model + ")" : "OFF → rule-based mock parser"}`,
+    `   • Dukaan Saathi AI : ${flags.hasClaude ? "LIVE (" + config.anthropic.model + ")" : "DEMO MODE → rule-based parser"}`,
   );
-  console.log(
-    `   • Sarvam voice   : ${flags.hasSarvam ? "ON" : "OFF → voice notes disabled"}`,
-  );
-  console.log(
-    `   • Twilio WhatsApp: ${flags.hasTwilio ? "ON" : "OFF → web simulator only"}`,
-  );
-  if (flags.hasTwilio) {
-    console.log(
-      `   • Twilio sig check: ${flags.validateTwilioSignature ? "ON" : "OFF → set VALIDATE_TWILIO_SIGNATURE=true in prod"}`,
-    );
+  if (!flags.hasClaude) {
+    const why = aiConfigDiagnostic();
+    if (why) console.log(`       ↳ reason: ${why}. Set a valid ANTHROPIC_API_KEY to enable live AI.`);
   }
+  console.log(
+    `   • Sarvam voice     : ${flags.hasSarvam ? "ON" : "OFF → browser speech only"}`,
+  );
 }

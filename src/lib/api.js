@@ -54,12 +54,19 @@ export const api = {
   },
 
   // Simulator (auth optional — falls back to a demo shop or an explicit number)
-  simMessage: (text, number) =>
-    request("/simulate/message", { method: "POST", body: { text, number }, auth: true }),
-  simVoice: (audioBlob, number) => {
+  simMessage: (text, number, lang) =>
+    request("/ai/message", { method: "POST", body: { text, number, lang }, auth: true }),
+  simVoice: (audioBlob, number, lang) => {
     const fd = new FormData();
     fd.append("audio", audioBlob, "note.webm");
     if (number) fd.append("number", number);
-    return request("/simulate/voice", { method: "POST", form: fd, auth: true });
+    if (lang) fd.append("lang", lang);
+    return request("/ai/voice", { method: "POST", form: fd, auth: true });
   },
+  simScan: (imageFile) => {
+    const fd = new FormData();
+    fd.append("image", imageFile);
+    return request("/ai/scan", { method: "POST", form: fd, auth: true });
+  },
+  simScanApply: (entries) => request("/ai/scan/apply", { method: "POST", body: { entries }, auth: true }),
 };

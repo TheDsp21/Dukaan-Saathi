@@ -242,3 +242,58 @@ export async function last7Days(shopId) {
   }
   return out;
 }
+
+export async function businessHealth(shopId) {
+  const trend = await last7Days(shopId);
+  const revs = trend.slice(0, 6).map(t => t.revenue);
+  const avgRev = revs.reduce((a, b) => a + b, 0) / 6 || 1;
+  const todayRev = trend[6].revenue;
+
+  // Revenue score: max 40 points if today is > 90% of avg
+  const revScore = Math.min(40, (todayRev / avgRev) * 40);
+
+  // Udhaar score: max 30 points if udhaar is manageable
+  const duesData = await dues(shopId);
+  const totalUdhaar = duesData.reduce((s, r) => s + r.outstanding, 0);
+  const udhaarRatio = totalUdhaar / (avgRev * 30 || 1); // rough monthly rev
+  const udhaarScore = Math.max(0, 30 - (udhaarRatio * 100)); // penalize high udhaar
+
+  // Inventory score: max 30 points for low out-of-stock
+  const low = await lowStock(shopId);
+  const totalProds = await db.prepare("SELECT COUNT(*) as c FROM products WHERE shop_id = ?").get(shopId);
+  const lowRatio = totalProds.c > 0 ? (low.length / totalProds.c) : 0;
+  const invScore = Math.max(0, 30 - (lowRatio * 60));
+
+  const score = Math.round(revScore + udhaarScore + invScore);
+  
+  let explanation = "";
+  let tone = "leaf";
+  let nextGoal = "";
+
+  if (score >= 80) {
+    explanation = "Excellent cash flow and strong sales.";
+    nextGoal = "Try upselling to hit your daily revenue target.";
+  } else if (score >= 50) {
+    explanation = "Business is stable, but watch pending udhaar.";
+    tone = "marigold";
+    nextGoal = "Focus on collecting pending Udhaar today.";
+  } else {
+    explanation = "Low sales and high pending dues are impacting health.";
+    tone = "terracotta";
+    nextGoal = "Urgently collect Udhaar and restock popular items.";
+  }
+
+  // Daily Goal is 110% of the 7-day average
+  const dailyGoal = Math.round(avgRev * 1.1);
+
+  return {
+    score: Math.min(100, Math.max(0, score)),
+    explanation,
+    insight: explanation,
+    nextGoal,
+    tone,
+    dailyGoal,
+    todaysGoal: dailyGoal,
+    currentRevenue: todayRev
+  };
+}

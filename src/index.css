@@ -2,18 +2,18 @@
 
 /* ---- Design tokens (Tailwind v4 @theme) ---------------------------------- */
 @theme {
-  --color-marigold: #f5a623;
-  --color-marigold-soft: #fbd58a;
-  --color-shopfront: #1b3a4b;
-  --color-shopfront-700: #16303e;
-  --color-paper: #fbf4e4;
-  --color-paper-deep: #f4e9cf;
-  --color-terracotta: #c1502e;
-  --color-leaf: #3f7a54;
-  --color-ink: #22201c;
+  --color-marigold: #F59E0B;
+  --color-marigold-soft: #FDE68A;
+  --color-shopfront: #0F172A;
+  --color-shopfront-700: #1E293B;
+  --color-paper: #F8FAFC;
+  --color-paper-deep: #F1F5F9;
+  --color-terracotta: #EF4444;
+  --color-leaf: #10B981;
+  --color-ink: #020617;
 
-  --font-display: "Fraunces", ui-serif, Georgia, serif;
-  --font-sans: "Poppins", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Outfit", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-body: "Inter", ui-sans-serif, system-ui, sans-serif;
 
   --shadow-card: 0 18px 40px -20px rgba(27, 58, 75, 0.35);
@@ -134,6 +134,76 @@ body {
 }
 .scan-line {
   animation: scanmove 2.2s ease-in-out infinite alternate;
+}
+
+/* ---- Skeleton shimmer ---------------------------------------------------- */
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background: rgba(27, 58, 75, 0.07);
+}
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.55),
+    transparent
+  );
+  animation: shimmer 1.5s infinite;
+}
+
+/* ---- Mic listening pulse ring -------------------------------------------- */
+@keyframes micpulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(193, 80, 46, 0.45);
+  }
+  70% {
+    box-shadow: 0 0 0 16px rgba(193, 80, 46, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(193, 80, 46, 0);
+  }
+}
+.mic-pulse {
+  animation: micpulse 1.5s infinite;
+}
+
+/* ---- Toast entrance ------------------------------------------------------- */
+@keyframes toastin {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+.toast-in {
+  animation: toastin 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* ---- Gentle float (avatars / accents) ------------------------------------ */
+@keyframes floaty {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+.animate-float {
+  animation: floaty 3.5s ease-in-out infinite;
 }
 
 /* ---- Respect reduced motion ---------------------------------------------- */

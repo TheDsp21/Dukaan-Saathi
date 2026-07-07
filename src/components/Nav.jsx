@@ -39,14 +39,20 @@ export default function Nav() {
 
         <div className="hidden items-center gap-7 md:flex">
           {LINKS.map((l) => (
-            <a key={l.href} href={l.href} className="font-sans text-sm font-medium text-ink/70 transition-colors hover:text-terracotta">
+            <a 
+              key={l.href} 
+              href={l.href} 
+              onClick={(e) => {
+                e.preventDefault();
+                document.querySelector(l.href)?.scrollIntoView({ behavior: "smooth" });
+              }}
+              className="font-sans text-sm font-medium text-ink/70 transition-colors hover:text-terracotta"
+            >
               {l.label}
             </a>
           ))}
           <LanguageSwitcher />
-          <Link to="/simulator" className="font-sans text-sm font-medium text-ink/70 hover:text-terracotta">
-            {t("nav.simulator")}
-          </Link>
+
           <Link
             to={isAuthed ? "/app" : "/login"}
             className="rounded-full bg-marigold px-4 py-2 font-sans text-sm font-semibold text-shopfront shadow-sm transition-transform hover:-translate-y-0.5"
@@ -64,14 +70,21 @@ export default function Nav() {
         <div className="border-t border-shopfront/10 bg-paper px-5 pb-4 md:hidden">
           <div className="flex flex-col gap-1 pt-2">
             {LINKS.map((l) => (
-              <a key={l.href} href={l.href} onClick={() => setOpen(false)} className="rounded-lg px-2 py-2.5 font-sans text-sm font-medium text-ink/80">
+              <a 
+                key={l.href} 
+                href={l.href} 
+                onClick={(e) => {
+                  e.preventDefault();
+                  setOpen(false);
+                  setTimeout(() => document.querySelector(l.href)?.scrollIntoView({ behavior: "smooth" }), 50);
+                }} 
+                className="rounded-lg px-2 py-2.5 font-sans text-sm font-medium text-ink/80"
+              >
                 {l.label}
               </a>
             ))}
             <div className="px-2 py-2"><LanguageSwitcher /></div>
-            <Link to="/simulator" onClick={() => setOpen(false)} className="rounded-lg px-2 py-2.5 font-sans text-sm font-medium text-ink/80">
-              {t("nav.simulator")}
-            </Link>
+
             <Link to={isAuthed ? "/app" : "/login"} onClick={() => setOpen(false)} className="mt-1 rounded-full bg-marigold px-4 py-2.5 text-center font-sans text-sm font-semibold text-shopfront">
               {isAuthed ? t("nav.dashboard") : t("nav.login")}
             </Link>

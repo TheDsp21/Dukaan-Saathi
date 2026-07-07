@@ -128,11 +128,6 @@ async function customerOutstanding(customerId) {
 async function logSale(p, shopId) {
   const item = p.item || "item";
   const qty = p.qty && p.qty > 0 ? p.qty : 1;
-  let amount = p.amount;
-  let unitPrice = p.unit_price;
-  if (amount == null && unitPrice != null) amount = unitPrice * qty;
-  if (unitPrice == null && amount != null) unitPrice = amount / qty;
-  if (amount == null) amount = 0;
 
   const payment_type = p.payment_type === "udhaar" ? "udhaar" : "cash";
   let customerId = null;
@@ -144,10 +139,20 @@ async function logSale(p, shopId) {
     customerId = c.id;
   }
 
+  let amount = p.amount;
+  let unitPrice = p.unit_price;
+
   const product = await findOrCreateProduct(shopId, item, {
     unit: p.unit,
-    sellPrice: unitPrice || amount,
+    sellPrice: unitPrice || amount || 0,
   });
+
+  if (amount == null && unitPrice != null) amount = unitPrice * qty;
+  if (unitPrice == null && amount != null) unitPrice = amount / qty;
+  if (amount == null) {
+    unitPrice = product.sell_price || 0;
+    amount = unitPrice * qty;
+  }
   const costAmount = (product.cost_price || 0) * qty;
 
   await db.prepare(
@@ -158,9 +163,16 @@ async function logSale(p, shopId) {
   await db.prepare("UPDATE products SET stock_qty = MAX(stock_qty - ?, 0) WHERE id = ?").run(qty, product.id);
 
   const newDue = customerId ? await customerOutstanding(customerId) : 0;
+  // Today's running totals so the reply can warmly confirm the bigger picture
+  // ("today's sales are now ₹X") — all grounded in the DB, never invented.
+  const today = await todaySummary(shopId);
+  const lowNow = product.stock_qty - qty <= 5 ? product.name : null;
   return {
     replyKey: "sale_logged",
-    data: { item, qty, unit: product.unit, amount, payment_type, party, newDue },
+    data: {
+      item, qty, unit: product.unit, amount, payment_type, party, newDue,
+      todayRevenue: today.revenue, todayOrders: today.orders, lowStockItem: lowNow,
+    },
   };
 }
 

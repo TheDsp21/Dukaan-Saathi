@@ -53,7 +53,7 @@ const EXTRACT_TOOL = {
   },
 };
 
-const SYSTEM = `You are the parsing brain of "Dukaan Saathi", a WhatsApp assistant for small Indian kirana shop owners.
+const SYSTEM = `You are the parsing brain of "Dukaan Saathi", an AI business partner for small Indian kirana shop owners.
 Shopkeepers message you in English, Hindi, Hinglish (Hindi in Roman letters) or Telugu, by text or transcribed voice.
 Extract exactly one intent plus entities and call the tool.
 
@@ -157,7 +157,17 @@ const KW = {
 const has = (t, list) => list.some((k) => t.includes(k));
 
 function mockParse(text, ctx) {
-  const t = text.toLowerCase();
+  let t = text.toLowerCase();
+  
+  const wordNums = {
+    one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10,
+    ek: 1, do: 2, teen: 3, chaar: 4, paanch: 5, chhe: 6, saat: 7, aath: 8, nau: 9, das: 10,
+    okati: 1, rendu: 2, moodu: 3, naalugu: 4, aidu: 5
+  };
+  Object.entries(wordNums).forEach(([w, n]) => {
+    t = t.replace(new RegExp(`\\b${w}\\b`, 'g'), n);
+  });
+
   const language = detectLang(text) || ctx.lang || "en";
   const base = { language, item: null, qty: null, unit: "unit", unit_price: null, amount: null, party_name: null, payment_type: null, confidence: 0.5, _raw: text };
 
@@ -176,10 +186,10 @@ function mockParse(text, ctx) {
   // A credit SALE — the "udhaar" marker plus an amount/quantity (optionally a
   // name): "Ramesh 3 kg sugar 150 udhaar", "Suresh ko 2 kg dal 120 udhaar".
   // Must be caught before the dues *question* below, since both mention udhaar.
-  const looksLikeSale = numbers.length >= 1 && (Boolean(unitMatch) || numbers.length >= 2 || Boolean(party));
+  const looksLikeSale = numbers.length >= 1 && (Boolean(unitMatch) || numbers.length >= 2 || Boolean(party) || has(t, ["sold", "sell", "give", "gave", "bought"]));
   if (has(t, KW.dues) && !has(t, KW.duesQ) && looksLikeSale) {
     const qty = numbers.length >= 2 ? numbers[0] : unitMatch ? numbers[0] : 1;
-    const amount = numbers.length >= 2 ? numbers[numbers.length - 1] : numbers[0];
+    const amount = numbers.length >= 2 ? numbers[numbers.length - 1] : unitMatch ? null : numbers[0];
     return {
       ...base,
       intent: "log_sale",
@@ -217,7 +227,7 @@ function mockParse(text, ctx) {
   if (numbers.length) {
     const udhaar = has(t, KW.dues) || Boolean(party);
     const qty = numbers.length >= 2 ? numbers[0] : unitMatch ? numbers[0] : 1;
-    const amount = numbers.length >= 2 ? numbers[numbers.length - 1] : numbers[0];
+    const amount = numbers.length >= 2 ? numbers[numbers.length - 1] : unitMatch ? null : numbers[0];
     return {
       ...base,
       intent: "log_sale",
@@ -236,7 +246,7 @@ function mockParse(text, ctx) {
 
 /* crude helpers for the fallback only */
 function guessItem(text, exclude = null) {
-  const stop = new Set(["kg","kgs","kilo","g","gram","grams","l","ltr","litre","liter","ml","packet","pkt","piece","pcs","dozen","rupees","rupaye","rupee","rs","cash","udhaar","udhar","ko","ka","ke","ki","aaya","aaye","diye","paid","for","to","and","का","के","को","रुपये","नकद","उधार"]);
+  const stop = new Set(["kg","kgs","kilo","g","gram","grams","l","ltr","litre","liter","ml","packet","pkt","piece","pcs","dozen","rupees","rupaye","rupee","rs","cash","udhaar","udhar","ko","ka","ke","ki","aaya","aaye","diye","paid","for","to","and","का","के","को","रुपये","नकद","उधार","sold","sell","gave","give","bought","buy"]);
   if (exclude) stop.add(exclude.toLowerCase());
   const words = text
     .replace(/\d+(?:\.\d+)?/g, " ")

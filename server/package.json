@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "Backend for Dukaan Saathi — WhatsApp assistant + multilingual shop ledger",
+  "description": "Backend for Dukaan Saathi — AI business partner + multilingual shop ledger",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",

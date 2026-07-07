@@ -11,13 +11,12 @@
     "logout": "Logout"
   },
   "hero": {
-    "badge": "🛒 Built for India's 12M+ kirana shops",
-    "titleA": "Your shop already runs on your voice.",
-    "titleB": " Now your business does too.",
-    "subhead": "No app to learn. No forms to fill. Just talk, text, or snap a photo — Dukaan Saathi handles the sales, inventory, and ledger for you.",
-    "ctaPrimary": "See it work live",
-    "ctaSecondary": "How it works",
-    "langNote": "Works in <b>English, Hindi & Telugu</b> — speak the way you already talk to customers."
+    "badge": "The AI Era for Kirana Stores",
+    "titleA": "Run your whole shop by ",
+    "titleB": "voice.",
+    "subhead": "Meet Dukaan Saathi. Your intelligent business partner that tracks sales, inventory, and udhaar instantly—just by talking to it.",
+    "ctaPrimary": "Explore Live Demo",
+    "ctaSecondary": "How it works"
   },
   "problem": {
     "eyebrow": "Every \"easy\" app still asks you to change how you work",

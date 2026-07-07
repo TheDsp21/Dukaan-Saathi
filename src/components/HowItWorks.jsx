@@ -11,6 +11,7 @@ import {
   VoiceNote,
   Waveform,
   ResultCard,
+  TypingDots,
 } from "./ui";
 
 const TABS = [
@@ -23,23 +24,26 @@ const TABS = [
 function VoiceScreen() {
   const [phase, setPhase] = useState(0);
   useEffect(() => {
-    const timer = setTimeout(() => setPhase((p) => (p + 1) % 3), [1600, 1600, 3000][phase]);
+    const timer = setTimeout(() => setPhase((p) => (p + 1) % 4), [2000, 1500, 2000, 4000][phase]);
     return () => clearTimeout(timer);
   }, [phase]);
   return (
     <ScreenBody>
       <VoiceNote side="out" duration="0:04" />
+      
       {phase >= 1 && (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-          <Bubble side="in">
-            <span className="flex items-center gap-2">
-              <Waveform tone="dark" bars={14} />
-              <span className="text-ink/50">{phase === 1 ? "transcribing…" : "understood ✓"}</span>
-            </span>
-          </Bubble>
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+          {phase === 1 ? (
+            <TypingDots />
+          ) : (
+            <Bubble side="in" className="border-l-4 border-l-leaf rounded-bl-sm">
+              <span className="font-medium text-ink/80">"Sugar do kilo, assi rupaye, cash"</span>
+            </Bubble>
+          )}
         </motion.div>
       )}
-      {phase >= 2 && (
+      
+      {phase >= 3 && (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
           <ResultCard title="Sale logged" rows={[["Item", "Sugar · 2 kg"], ["Amount", "₹80"], ["Payment", "Cash"]]} />
         </motion.div>
