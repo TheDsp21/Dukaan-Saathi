@@ -97,6 +97,8 @@ file (`server/data/dukaan.db`).
    (`render.yaml` is read automatically) → set `JWT_SECRET`, `TURSO_DATABASE_URL`,
    `TURSO_AUTH_TOKEN` (and optionally `ANTHROPIC_API_KEY`) → **Apply**.
 
+See **[DEPLOY.md](DEPLOY.md)** for copy-paste commands and the full env var table.
+
 Free web services sleep after ~15 min idle and cold-start on the next request.
 
 ## Tech
