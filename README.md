@@ -3,7 +3,7 @@
 An AI assistant that lets small shop owners run their whole business — sales,
 inventory, ledger (udhaar) — just by **talking, sending a WhatsApp message, or
 snapping a photo of their notebook**. Understands **English, Hindi & Telugu**
-(text and voice). The official website + live dashboard are also trilingual.
+(text and voice). The official website + live dashboard  are also trilingual.
 
 - **Marketing site** — the pitch (`/`)
 - **WhatsApp simulator** — try the assistant with zero setup (`/simulator`)
