@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 function applyLightTheme() {
   if (typeof window === "undefined") return;
 
+  // Force the document root to light mode and set local storage variables
   const root = window.document.documentElement;
   root.classList.remove("dark");
   root.style.colorScheme = "light";
