@@ -443,6 +443,23 @@ dataRouter.post("/reminders/send", async (req, res) => {
   }
 });
 
+/* DELETE /products/:id — Remove a product from inventory */
+dataRouter.delete("/products/:id", async (req, res) => {
+  const shopId = req.shop.id;
+  const { id }  = req.params;
+
+  const existing = await db.prepare("SELECT * FROM products WHERE id = ? AND shop_id = ?").get(id, shopId);
+  if (!existing) return res.status(404).json({ error: "Product not found." });
+
+  try {
+    await db.prepare("DELETE FROM products WHERE id = ? AND shop_id = ?").run(id, shopId);
+    const inv = await inventory(shopId);
+    res.json({ ok: true, deleted: { id: Number(id), name: existing.name }, inventory: inv });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 /* PUT /products/:id — Edit an existing product */
 dataRouter.put("/products/:id", async (req, res) => {
   const shopId = req.shop.id;

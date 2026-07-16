@@ -130,6 +130,7 @@ export const api = {
   updateCustomer: (id, payload) => request(`/dashboard/customers/${id}`, { method: "PUT", body: payload }),
   deleteCustomer: (id) => request(`/dashboard/customers/${id}`, { method: "DELETE" }),
   // Inventory
-  addProduct: (payload) => request("/dashboard/products", { method: "POST", body: payload }),
-  updateProduct: (id, payload) => request(`/dashboard/products/${id}`, { method: "PUT", body: payload }),
+  addProduct:    (payload)     => request("/dashboard/products",      { method: "POST",   body: payload }),
+  updateProduct: (id, payload) => request(`/dashboard/products/${id}`, { method: "PUT",    body: payload }),
+  deleteProduct: (id)          => request(`/dashboard/products/${id}`, { method: "DELETE" }),
 };
