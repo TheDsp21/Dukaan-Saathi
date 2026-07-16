@@ -113,9 +113,17 @@ export async function listPendingRequestsForShop(shopId) {
 
 export async function listConnectedShops(shopId) {
   const rows = await db.prepare(
-    `SELECT cs.*, s.id AS connected_shop_id, s.name AS connected_shop_name
+    `SELECT cs.*, 
+            s.id AS connected_shop_id, 
+            s.name AS connected_shop_name,
+            s.whatsapp_number AS connected_whatsapp,
+            o.owner_name AS connected_owner_name,
+            o.mobile_number AS connected_mobile_number,
+            o.shop_address AS connected_shop_address,
+            o.business_category AS connected_business_category
      FROM connected_shops cs
      LEFT JOIN shops s ON s.id = CASE WHEN cs.shop_a_id = ? THEN cs.shop_b_id ELSE cs.shop_a_id END
+     LEFT JOIN owner_profiles o ON o.id = s.owner_id
      WHERE cs.shop_a_id = ? OR cs.shop_b_id = ?
      ORDER BY cs.created_at DESC`,
   ).all(shopId, shopId, shopId);
@@ -124,7 +132,43 @@ export async function listConnectedShops(shopId) {
     ...row,
     id: row.connected_shop_id,
     name: row.connected_shop_name,
+    shop_name: row.connected_shop_name,
+    owner_name: row.connected_owner_name || null,
+    whatsapp_number: row.connected_whatsapp,
+    mobile_number: row.connected_mobile_number || row.connected_whatsapp || null,
+    shop_address: row.connected_shop_address || null,
+    business_category: row.connected_business_category || null,
+    connected_since: row.created_at,
   }));
+}
+
+export async function disconnectShop(shopAId, shopBId) {
+  if (!shopAId || !shopBId) return false;
+  const a = Math.min(shopAId, shopBId);
+  const b = Math.max(shopAId, shopBId);
+
+  const res1 = await db.prepare(
+    `DELETE FROM connected_shops WHERE shop_a_id = ? AND shop_b_id = ?`
+  ).run(a, b);
+
+  await db.prepare(
+    `DELETE FROM business_connections 
+     WHERE (sender_shop_id = ? AND recipient_shop_id = ?)
+        OR (sender_shop_id = ? AND recipient_shop_id = ?)`
+  ).run(shopAId, shopBId, shopBId, shopAId);
+
+  const currentShop = await db.prepare("SELECT name FROM shops WHERE id = ?").get(shopAId);
+  const currentName = currentShop?.name || "A shop";
+
+  publishNotification({
+    shopId: shopBId,
+    recipientShopId: shopBId,
+    title: "Shop Connection Terminated",
+    message: `${currentName} has disconnected from your shop.`,
+    category: "connections",
+  });
+
+  return res1.changes > 0;
 }
 
 export function canPerformBusinessTransaction(fromShopId, toShopId) {

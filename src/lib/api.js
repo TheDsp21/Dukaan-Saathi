@@ -79,6 +79,8 @@ export const api = {
   resetData: () => request("/dashboard/reset", { method: "POST", body: {} }),
   connectShop: (recipient_shop_id) => request("/connections/request", { method: "POST", body: { recipient_shop_id } }),
   respondConnection: (request_id, action) => request("/connections/respond", { method: "POST", body: { request_id, action } }),
+  getConnectedShops: () => request("/connections/connected"),
+  disconnectShop: (target_shop_id) => request("/connections/disconnect", { method: "POST", body: { target_shop_id } }),
   // CSV export: returns a Blob so the caller can trigger a download.
   exportCsv: async () => {
     const res = await fetch("/api/dashboard/export", {

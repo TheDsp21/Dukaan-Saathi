@@ -6,6 +6,7 @@ import {
   listPendingRequestsForShop,
   listConnectedShops,
   createBusinessTransaction,
+  disconnectShop,
 } from '../lib/connections.js';
 import { getShopById } from '../db.js';
 
@@ -46,6 +47,21 @@ connectionsRouter.post('/respond', requireAuth, async (req, res) => {
 connectionsRouter.get('/connected', requireAuth, async (req, res) => {
   const connected = await listConnectedShops(req.shop?.id);
   res.json({ connected });
+});
+
+connectionsRouter.post('/disconnect', requireAuth, async (req, res) => {
+  const { target_shop_id } = req.body || {};
+  const currentShopId = req.shop?.id;
+  if (!currentShopId || !target_shop_id) {
+    return res.status(400).json({ error: 'Shop IDs are required' });
+  }
+
+  try {
+    const success = await disconnectShop(currentShopId, Number(target_shop_id));
+    return res.json({ ok: success });
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
 });
 
 connectionsRouter.post('/transaction', requireAuth, async (req, res) => {
