@@ -8,7 +8,7 @@ const tempDir = mkdtempSync(path.join(os.tmpdir(), "dukaan-connect-shop-"));
 process.env.DATA_DIR = tempDir;
 
 const { dbReady, db, createOwnerProfile } = await import("../db.js");
-const { sendConnectionRequest } = await import("../lib/connections.js");
+const { sendConnectionRequest, respondToConnectionRequest } = await import("../lib/connections.js");
 const { getNotificationsForShop } = await import("../lib/notifications.js");
 
 test("manages business connections cleanly, enforcing duplication and self-connection boundaries", async () => {
@@ -84,6 +84,39 @@ test("manages business connections cleanly, enforcing duplication and self-conne
     },
     /A pending connection request already exists/
   );
+
+  // Test 4: Reject connection request
+  const rejectRes = await respondToConnectionRequest(req1.id, shopB.id, "reject");
+  assert.ok(rejectRes);
+  assert.equal(rejectRes.status, "rejected");
+
+  // Verify request is deleted from database
+  const inDbDeleted = await db.prepare("SELECT * FROM business_connections WHERE id = ?").get(req1.id);
+  assert.equal(inDbDeleted, undefined);
+
+  // Verify Shop A received a rejection notification
+  const notificationsShopAReject = getNotificationsForShop(shopA.id);
+  const rejectNotif = notificationsShopAReject.find(n => n.title === "Connection Request Rejected");
+  assert.ok(rejectNotif);
+  assert.equal(rejectNotif.message, "Shop B rejected your connection request.");
+
+  // Test 5: Accept connection request (create a new one first, then accept)
+  const req2 = await sendConnectionRequest(shopA.id, shopB.id);
+  assert.ok(req2);
+
+  const acceptRes = await respondToConnectionRequest(req2.id, shopB.id, "accept");
+  assert.ok(acceptRes);
+  assert.equal(acceptRes.status, "accepted");
+
+  // Verify they are now connected in database
+  const connectedRow = await db.prepare("SELECT * FROM connected_shops WHERE shop_a_id = ? AND shop_b_id = ?").get(a, b);
+  assert.ok(connectedRow);
+
+  // Verify Shop A received an acceptance notification
+  const notificationsShopAAccept = getNotificationsForShop(shopA.id);
+  const acceptNotif = notificationsShopAAccept.find(n => n.title === "Connection Request Accepted");
+  assert.ok(acceptNotif);
+  assert.equal(acceptNotif.message, "Shop B accepted your connection request.");
 
   try {
     rmSync(tempDir, { recursive: true, force: true });

@@ -57,16 +57,47 @@ export async function respondToConnectionRequest(requestId, shopId, action) {
   if (request.recipient_shop_id !== shopId) return null;
 
   const status = normalizeStatus(action);
-  await db.prepare(`UPDATE business_connections SET status = ? WHERE id = ?`).run(status, requestId);
 
   if (status === 'accepted') {
+    const a = Math.min(request.sender_shop_id, request.recipient_shop_id);
+    const b = Math.max(request.sender_shop_id, request.recipient_shop_id);
     await db.prepare(
       `INSERT OR IGNORE INTO connected_shops (shop_a_id, shop_b_id, created_at)
        VALUES (?, ?, datetime('now'))`,
-    ).run(Math.min(request.sender_shop_id, request.recipient_shop_id), Math.max(request.sender_shop_id, request.recipient_shop_id));
+    ).run(a, b);
+
+    await db.prepare(`UPDATE business_connections SET status = 'accepted' WHERE id = ?`).run(requestId);
+
+    const receiverShop = await db.prepare("SELECT name FROM shops WHERE id = ?").get(shopId);
+    const receiverName = receiverShop?.name || "A shop";
+
+    publishNotification({
+      shopId: request.sender_shop_id,
+      recipientShopId: request.sender_shop_id,
+      title: "Connection Request Accepted",
+      message: `${receiverName} accepted your connection request.`,
+      category: "connections",
+    });
+
+    return db.prepare(`SELECT * FROM business_connections WHERE id = ?`).get(requestId);
+  } else if (status === 'rejected') {
+    await db.prepare(`DELETE FROM business_connections WHERE id = ?`).run(requestId);
+
+    const receiverShop = await db.prepare("SELECT name FROM shops WHERE id = ?").get(shopId);
+    const receiverName = receiverShop?.name || "A shop";
+
+    publishNotification({
+      shopId: request.sender_shop_id,
+      recipientShopId: request.sender_shop_id,
+      title: "Connection Request Rejected",
+      message: `${receiverName} rejected your connection request.`,
+      category: "connections",
+    });
+
+    return { id: requestId, status: 'rejected' };
   }
 
-  return db.prepare(`SELECT * FROM business_connections WHERE id = ?`).get(requestId);
+  return null;
 }
 
 export async function listPendingRequestsForShop(shopId) {
