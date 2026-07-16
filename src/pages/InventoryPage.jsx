@@ -3,7 +3,7 @@ import { useOutletContext } from "react-router-dom";
 import {
   Package, AlertTriangle, Download, QrCode, ScanLine,
   Plus, X, CheckCircle2, ChevronDown, Tag, Layers,
-  IndianRupee, Truck, CalendarDays, Hash, Barcode, Info, Loader2,
+  IndianRupee, Truck, CalendarDays, Hash, Barcode, Info, Loader2, Pencil, Save,
 } from "lucide-react";
 import { Card, Empty } from "./DashboardPage";
 import { api } from "../lib/api";
@@ -134,10 +134,27 @@ function inputCls(hasError) {
     }`;
 }
 
-/* ── Add Product Modal ───────────────────────────────────── */
-function AddProductModal({ onClose, onSaved }) {
-  const toast = useToast();
-  const [form, setForm]     = useState(EMPTY_FORM);
+/* ── Product Modal (Add & Edit) ─────────────────────────── */
+// `product` prop: if provided the modal opens in Edit mode, pre-filled.
+function AddProductModal({ onClose, onSaved, product = null }) {
+  const isEdit = Boolean(product);
+  const toast  = useToast();
+
+  const initialForm = isEdit ? {
+    name:                product.name              ?? "",
+    category:            product.category          ?? "",
+    stock_qty:           String(product.stock_qty  ?? ""),
+    unit:                product.unit              ?? "unit",
+    purchase_price:      String(product.purchase_price ?? product.cost_price ?? ""),
+    selling_price:       String(product.selling_price  ?? product.sell_price  ?? ""),
+    supplier:            product.supplier          ?? "",
+    expiry_date:         product.expiry_date       ?? "",
+    batch_number:        product.batch_number      ?? "",
+    barcode:             product.barcode           ?? "",
+    low_stock_threshold: String(product.low_stock_threshold ?? "5"),
+  } : EMPTY_FORM;
+
+  const [form, setForm]     = useState(initialForm);
   const [errors, setErrors] = useState(EMPTY_ERRORS);
   const [submitted, setSubmitted] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -159,23 +176,29 @@ function AddProductModal({ onClose, onSaved }) {
     if (!valid) return;
 
     setSaving(true);
+    const payload = {
+      name:                form.name.trim(),
+      category:            form.category,
+      stock_qty:           Number(form.stock_qty),
+      unit:                form.unit,
+      purchase_price:      Number(form.purchase_price),
+      selling_price:       Number(form.selling_price),
+      supplier:            form.supplier.trim() || null,
+      expiry_date:         form.expiry_date || null,
+      batch_number:        form.batch_number.trim() || null,
+      barcode:             form.barcode.trim() || null,
+      low_stock_threshold: Number(form.low_stock_threshold) || 5,
+    };
     try {
-      await api.addProduct({
-        name:                form.name.trim(),
-        category:            form.category,
-        stock_qty:           Number(form.stock_qty),
-        unit:                form.unit,
-        purchase_price:      Number(form.purchase_price),
-        selling_price:       Number(form.selling_price),
-        supplier:            form.supplier.trim() || null,
-        expiry_date:         form.expiry_date || null,
-        batch_number:        form.batch_number.trim() || null,
-        barcode:             form.barcode.trim() || null,
-        low_stock_threshold: Number(form.low_stock_threshold) || 5,
-      });
-      toast.success(`"${form.name.trim()}" added to inventory!`);
-      onSaved();   // refresh inventory list
-      onClose();   // close modal
+      if (isEdit) {
+        await api.updateProduct(product.id, payload);
+        toast.success(`"${form.name.trim()}" updated successfully!`);
+      } else {
+        await api.addProduct(payload);
+        toast.success(`"${form.name.trim()}" added to inventory!`);
+      }
+      onSaved();
+      onClose();
     } catch (err) {
       toast.error(err.message || "Failed to save product. Please try again.");
     } finally {
@@ -199,12 +222,12 @@ function AddProductModal({ onClose, onSaved }) {
         {/* ── Header ── */}
         <div className="flex shrink-0 items-center justify-between border-b border-black/5 px-6 py-4">
           <div className="flex items-center gap-3">
-            <div className="grid h-10 w-10 place-items-center rounded-2xl bg-gradient-to-br from-shopfront to-shopfront/70 shadow-sm">
-              <Package className="h-5 w-5 text-white" />
+            <div className={`grid h-10 w-10 place-items-center rounded-2xl shadow-sm bg-gradient-to-br ${isEdit ? "from-marigold to-marigold/70" : "from-shopfront to-shopfront/70"}`}>
+              {isEdit ? <Pencil className="h-5 w-5 text-white" /> : <Package className="h-5 w-5 text-white" />}
             </div>
             <div>
-              <h2 className="font-semibold text-ink text-base">Add New Product</h2>
-              <p className="text-xs text-ink/40">Fill in the details to add a product to inventory</p>
+              <h2 className="font-semibold text-ink text-base">{isEdit ? "Edit Product" : "Add New Product"}</h2>
+              <p className="text-xs text-ink/40">{isEdit ? `Editing: ${product.name}` : "Fill in the details to add a product to inventory"}</p>
             </div>
           </div>
           <button
@@ -467,6 +490,10 @@ function AddProductModal({ onClose, onSaved }) {
 export default function InventoryPage() {
   const { data, load, t } = useOutletContext();
   const [showAddModal, setShowAddModal] = useState(false);
+  const [editingProduct, setEditingProduct] = useState(null);
+
+  const openEdit = (product) => setEditingProduct(product);
+  const closeEdit = () => setEditingProduct(null);
 
   const exportCsv = () => {
     alert("Full inventory export coming soon!");
@@ -509,6 +536,7 @@ export default function InventoryPage() {
                   <th className="py-2">Batch</th>
                   <th className="py-2">Barcode / QR</th>
                   <th className="py-2 text-right">Status</th>
+                  <th className="py-2 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -552,6 +580,16 @@ export default function InventoryPage() {
                           </span>
                         )}
                       </td>
+                      {/* Edit action */}
+                      <td className="py-2.5 text-right">
+                        <button
+                          onClick={() => openEdit(p)}
+                          title="Edit product"
+                          className="inline-flex items-center gap-1 rounded-full border border-black/10 px-2.5 py-1 text-xs font-semibold text-ink/60 hover:border-shopfront/40 hover:bg-shopfront/5 hover:text-shopfront transition-colors"
+                        >
+                          <Pencil className="h-3.5 w-3.5" /> Edit
+                        </button>
+                      </td>
                     </tr>
                   );
                 })}
@@ -563,10 +601,19 @@ export default function InventoryPage() {
         )}
       </Card>
 
-      {/* Modal */}
+      {/* Add Product Modal */}
       {showAddModal && (
         <AddProductModal
           onClose={() => setShowAddModal(false)}
+          onSaved={load}
+        />
+      )}
+
+      {/* Edit Product Modal */}
+      {editingProduct && (
+        <AddProductModal
+          product={editingProduct}
+          onClose={closeEdit}
           onSaved={load}
         />
       )}

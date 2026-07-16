@@ -443,6 +443,69 @@ dataRouter.post("/reminders/send", async (req, res) => {
   }
 });
 
+/* PUT /products/:id — Edit an existing product */
+dataRouter.put("/products/:id", async (req, res) => {
+  const shopId = req.shop.id;
+  const { id } = req.params;
+  const {
+    name, stock_qty, unit,
+    purchase_price, selling_price, supplier,
+    expiry_date, batch_number, barcode, low_stock_threshold,
+  } = req.body || {};
+
+  // Verify ownership
+  const existing = await db.prepare("SELECT * FROM products WHERE id = ? AND shop_id = ?").get(id, shopId);
+  if (!existing) return res.status(404).json({ error: "Product not found." });
+
+  // Validate required fields
+  if (name !== undefined && !(name || "").trim()) {
+    return res.status(400).json({ error: "Product name cannot be empty." });
+  }
+  if (stock_qty !== undefined && (isNaN(Number(stock_qty)) || Number(stock_qty) < 0)) {
+    return res.status(400).json({ error: "Valid stock quantity is required." });
+  }
+  if (purchase_price !== undefined && (isNaN(Number(purchase_price)) || Number(purchase_price) < 0)) {
+    return res.status(400).json({ error: "Valid purchase price is required." });
+  }
+  if (selling_price !== undefined && (isNaN(Number(selling_price)) || Number(selling_price) < 0)) {
+    return res.status(400).json({ error: "Valid selling price is required." });
+  }
+
+  const updatedName      = name !== undefined ? name.trim() : existing.name;
+  const updatedNameNorm  = name !== undefined ? normalize(name.trim()) : existing.name_norm;
+  const updatedUnit      = unit !== undefined ? (unit.toString().trim() || "unit") : existing.unit;
+  const updatedStockQty  = stock_qty !== undefined ? Number(stock_qty) : existing.stock_qty;
+  const updatedCostPrice = purchase_price !== undefined ? Number(purchase_price) : existing.cost_price;
+  const updatedSellPrice = selling_price !== undefined ? Number(selling_price) : existing.sell_price;
+  const updatedSupplier  = supplier !== undefined ? (supplier.trim() || null) : existing.supplier;
+  const updatedExpiry    = expiry_date !== undefined ? (expiry_date.trim() || null) : existing.expiry_date;
+  const updatedBatch     = batch_number !== undefined ? (batch_number.trim() || null) : existing.batch_number;
+  const updatedBarcode   = barcode !== undefined ? (barcode.trim() || null) : existing.barcode;
+  const updatedThreshold = low_stock_threshold !== undefined ? Number(low_stock_threshold) : existing.low_stock_threshold;
+
+  try {
+    await db.prepare(
+      `UPDATE products SET
+         name = ?, name_norm = ?, unit = ?, stock_qty = ?,
+         cost_price = ?, sell_price = ?, purchase_price = ?, selling_price = ?,
+         supplier = ?, expiry_date = ?, batch_number = ?, barcode = ?,
+         low_stock_threshold = ?
+       WHERE id = ? AND shop_id = ?`
+    ).run(
+      updatedName, updatedNameNorm, updatedUnit, updatedStockQty,
+      updatedCostPrice, updatedSellPrice, updatedCostPrice, updatedSellPrice,
+      updatedSupplier, updatedExpiry, updatedBatch, updatedBarcode,
+      updatedThreshold, id, shopId
+    );
+
+    const product = await db.prepare("SELECT * FROM products WHERE id = ?").get(id);
+    const inv = await inventory(shopId);
+    res.json({ ok: true, product, inventory: inv });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 /* POST /products — Add a new product to the shop's inventory */
 dataRouter.post("/products", async (req, res) => {
   const shopId = req.shop.id;

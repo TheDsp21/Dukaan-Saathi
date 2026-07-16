@@ -131,4 +131,5 @@ export const api = {
   deleteCustomer: (id) => request(`/dashboard/customers/${id}`, { method: "DELETE" }),
   // Inventory
   addProduct: (payload) => request("/dashboard/products", { method: "POST", body: payload }),
+  updateProduct: (id, payload) => request(`/dashboard/products/${id}`, { method: "PUT", body: payload }),
 };
