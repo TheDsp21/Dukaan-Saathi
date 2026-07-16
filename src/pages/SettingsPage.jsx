@@ -27,6 +27,7 @@ export default function SettingsPage() {
   const [success, setSuccess] = useState("");
   const [showConfirmReset, setShowConfirmReset] = useState(false);
   const [confirmResetText, setConfirmResetText] = useState("");
+  const [resetStep, setResetStep] = useState(1);
 
   const handleResetAllData = async () => {
     setBusy("reset");
@@ -36,10 +37,50 @@ export default function SettingsPage() {
       toast.success("Your shop data has been reset successfully.");
       setShowConfirmReset(false);
       setConfirmResetText("");
+      setResetStep(1);
       await load();
       navigate("/app/dashboard");
     } catch (err) {
       toast.error(err.message || "Failed to reset shop data");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleDownloadBackup = async (format) => {
+    setBusy("backup");
+    try {
+      const blob = await api.exportCsv();
+      const text = await blob.text();
+      const stamp = new Date().toISOString().slice(0, 10);
+      const filename = `dukaan-backup-${stamp}`;
+      
+      if (format === "csv") {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `${filename}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+      } else {
+        // Excel compatible format (tab delimited)
+        const tsvText = text.replace(/,/g, "\t");
+        const excelBlob = new Blob([tsvText], { type: "application/vnd.ms-excel;charset=utf-8;" });
+        const url = URL.createObjectURL(excelBlob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `${filename}.xls`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+      }
+      toast.success("Backup downloaded successfully!");
+      await handleResetAllData();
+    } catch (err) {
+      toast.error("Backup failed: " + err.message);
     } finally {
       setBusy(false);
     }
@@ -252,59 +293,108 @@ export default function SettingsPage() {
         <div
           className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4"
           onClick={() => {
+            if (busy) return;
             setShowConfirmReset(false);
             setConfirmResetText("");
+            setResetStep(1);
           }}
         >
-          <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
-            <h3 className="font-display text-lg font-bold text-shopfront mb-2">Reset All Shop Data?</h3>
-            <p className="text-sm text-ink/75 mb-3">This action will permanently delete:</p>
-            <ul className="text-sm text-ink/60 list-disc list-inside space-y-1 mb-4">
-              <li>Sales</li>
-              <li>Customers</li>
-              <li>Inventory</li>
-              <li>Udhaar Records</li>
-              <li>Reports</li>
-              <li>Notifications</li>
-              <li>Dashboard Statistics</li>
-            </ul>
-            <p className="text-sm text-terracotta font-semibold mb-4">This action cannot be undone.</p>
-            
-            <div className="mb-4">
-              <label className="block text-xs font-medium text-ink/60 mb-1.5">
-                Type <span className="font-bold text-terracotta select-all">RESET</span> to confirm:
-              </label>
-              <input
-                type="text"
-                value={confirmResetText}
-                onChange={(e) => setConfirmResetText(e.target.value)}
-                placeholder="RESET"
-                className="w-full rounded-xl border border-black/15 bg-paper px-4 py-2 text-sm text-shopfront outline-none focus:border-terracotta focus:ring-2 focus:ring-terracotta/20"
-              />
-            </div>
+          {resetStep === 1 ? (
+            <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+              <h3 className="font-display text-lg font-bold text-shopfront mb-2">Reset All Shop Data?</h3>
+              <p className="text-sm text-ink/75 mb-3">This action will permanently delete:</p>
+              <ul className="text-sm text-ink/60 list-disc list-inside space-y-1 mb-4">
+                <li>Sales</li>
+                <li>Customers</li>
+                <li>Inventory</li>
+                <li>Udhaar Records</li>
+                <li>Reports</li>
+                <li>Notifications</li>
+                <li>Dashboard Statistics</li>
+              </ul>
+              <p className="text-sm text-terracotta font-semibold mb-4">This action cannot be undone.</p>
+              
+              <div className="mb-4">
+                <label className="block text-xs font-medium text-ink/60 mb-1.5">
+                  Type <span className="font-bold text-terracotta select-all">RESET</span> to confirm:
+                </label>
+                <input
+                  type="text"
+                  value={confirmResetText}
+                  onChange={(e) => setConfirmResetText(e.target.value)}
+                  placeholder="RESET"
+                  className="w-full rounded-xl border border-black/15 bg-paper px-4 py-2 text-sm text-shopfront outline-none focus:border-terracotta focus:ring-2 focus:ring-terracotta/20"
+                />
+              </div>
 
-            <div className="flex justify-end gap-3">
-              <button
-                type="button"
-                disabled={busy === "reset"}
-                onClick={() => {
-                  setShowConfirmReset(false);
-                  setConfirmResetText("");
-                }}
-                className="rounded-full bg-paper px-5 py-2 text-sm font-semibold text-ink/70 hover:bg-paper-deep transition-colors disabled:opacity-50"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                disabled={confirmResetText !== "RESET" || busy === "reset"}
-                onClick={handleResetAllData}
-                className="rounded-full bg-terracotta px-5 py-2 text-sm font-semibold text-white hover:bg-terracotta/90 transition-colors disabled:opacity-50"
-              >
-                {busy === "reset" ? "Resetting…" : "Reset"}
-              </button>
+              <div className="flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowConfirmReset(false);
+                    setConfirmResetText("");
+                    setResetStep(1);
+                  }}
+                  className="rounded-full bg-paper px-5 py-2 text-sm font-semibold text-ink/70 hover:bg-paper-deep transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  disabled={confirmResetText !== "RESET"}
+                  onClick={() => setResetStep(2)}
+                  className="rounded-full bg-terracotta px-5 py-2 text-sm font-semibold text-white hover:bg-terracotta/90 transition-colors disabled:opacity-50"
+                >
+                  Reset
+                </button>
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+              <h3 className="font-display text-lg font-bold text-shopfront mb-3">Download Backup?</h3>
+              <p className="text-sm text-ink/75 mb-6">
+                Would you like to download a backup before resetting?
+              </p>
+              <div className="flex flex-col gap-3">
+                <button
+                  type="button"
+                  disabled={busy === "backup" || busy === "reset"}
+                  onClick={() => handleDownloadBackup("excel")}
+                  className="flex items-center justify-center gap-2 rounded-full border border-black/15 bg-white px-5 py-2.5 text-sm font-semibold text-ink hover:bg-paper transition-colors disabled:opacity-50"
+                >
+                  Download Excel
+                </button>
+                <button
+                  type="button"
+                  disabled={busy === "backup" || busy === "reset"}
+                  onClick={() => handleDownloadBackup("csv")}
+                  className="flex items-center justify-center gap-2 rounded-full border border-black/15 bg-white px-5 py-2.5 text-sm font-semibold text-ink hover:bg-paper transition-colors disabled:opacity-50"
+                >
+                  Download CSV
+                </button>
+                <button
+                  type="button"
+                  disabled={busy === "backup" || busy === "reset"}
+                  onClick={handleResetAllData}
+                  className="flex items-center justify-center gap-2 rounded-full bg-terracotta px-5 py-2.5 text-sm font-semibold text-white hover:bg-terracotta/90 transition-colors disabled:opacity-50"
+                >
+                  {busy === "reset" ? "Resetting…" : "Skip Backup"}
+                </button>
+                <button
+                  type="button"
+                  disabled={busy === "backup" || busy === "reset"}
+                  onClick={() => {
+                    setShowConfirmReset(false);
+                    setConfirmResetText("");
+                    setResetStep(1);
+                  }}
+                  className="text-center text-sm text-ink/50 hover:text-ink hover:underline transition-colors mt-2"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

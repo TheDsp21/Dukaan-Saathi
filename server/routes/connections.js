@@ -18,12 +18,15 @@ connectionsRouter.post('/request', requireAuth, async (req, res) => {
     return res.status(400).json({ error: 'Sender and recipient shop ids are required' });
   }
 
-  const request = await sendConnectionRequest(senderShopId, recipient_shop_id);
-  if (!request) {
-    return res.status(400).json({ error: 'Unable to create connection request' });
+  try {
+    const request = await sendConnectionRequest(senderShopId, Number(recipient_shop_id));
+    if (!request) {
+      return res.status(400).json({ error: 'Unable to create connection request' });
+    }
+    return res.json({ request });
+  } catch (error) {
+    return res.status(400).json({ error: error.message });
   }
-
-  return res.json({ request });
 });
 
 connectionsRouter.get('/pending', requireAuth, async (req, res) => {

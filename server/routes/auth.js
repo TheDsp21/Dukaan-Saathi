@@ -290,13 +290,15 @@ authRouter.get("/shops", requireAuth, async (req, res) => {
   res.json({ shops: shops.map(publicShop) });
 });
 
-authRouter.get("/directory", requireAuth, async (_req, res) => {
+authRouter.get("/directory", requireAuth, async (req, res) => {
+  const currentShopId = req.shop.id;
   const shops = await db.prepare(
     `SELECT s.*, o.shop_name, o.owner_name, o.mobile_number, o.email, o.shop_address, o.shop_logo, o.business_category
      FROM shops s
      LEFT JOIN owner_profiles o ON o.id = s.owner_id
+     WHERE s.id != ?
      ORDER BY s.created_at DESC`,
-  ).all();
+  ).all(currentShopId);
   res.json({ shops: shops.map(publicShop) });
 });
 

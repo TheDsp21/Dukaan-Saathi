@@ -5,13 +5,30 @@ function normalizeStatus(status) {
 }
 
 export async function sendConnectionRequest(fromShopId, toShopId) {
-  if (!fromShopId || !toShopId || fromShopId === toShopId) return null;
+  if (!fromShopId || !toShopId) return null;
+  if (Number(fromShopId) === Number(toShopId)) {
+    throw new Error("You cannot connect a shop to itself");
+  }
 
+  // Check if they are already connected
+  const a = Math.min(fromShopId, toShopId);
+  const b = Math.max(fromShopId, toShopId);
+  const connected = await db.prepare(`SELECT 1 FROM connected_shops WHERE shop_a_id = ? AND shop_b_id = ?`).get(a, b);
+  if (connected) {
+    throw new Error("Shops are already connected");
+  }
+
+  // Check if there is an active pending connection request in either direction
   const existing = await db.prepare(
-    `SELECT * FROM business_connections WHERE sender_shop_id = ? AND recipient_shop_id = ? ORDER BY created_at DESC LIMIT 1`,
-  ).get(fromShopId, toShopId);
+    `SELECT * FROM business_connections 
+     WHERE (sender_shop_id = ? AND recipient_shop_id = ? AND status = 'pending')
+        OR (sender_shop_id = ? AND recipient_shop_id = ? AND status = 'pending')
+     LIMIT 1`,
+  ).get(fromShopId, toShopId, toShopId, fromShopId);
 
-  if (existing && existing.status === 'pending') return existing;
+  if (existing) {
+    throw new Error("A pending connection request already exists between these shops");
+  }
 
   const info = await db.prepare(
     `INSERT INTO business_connections (sender_shop_id, recipient_shop_id, status, created_at)

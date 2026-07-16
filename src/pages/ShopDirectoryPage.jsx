@@ -2,14 +2,30 @@ import { useEffect, useMemo, useState } from "react";
 import { useOutletContext } from "react-router-dom";
 import { Search, Filter, Store, CheckCircle2, Phone, MapPin, User, Sparkles, BadgeCheck } from "lucide-react";
 import { api } from "../lib/api";
+import { useToast } from "../components/Toast";
 
 export default function ShopDirectoryPage() {
   const { t } = useOutletContext();
+  const toast = useToast();
+  
   const [shops, setShops] = useState([]);
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("all");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [connecting, setConnecting] = useState({});
+
+  const handleConnectShop = async (shopId) => {
+    setConnecting((prev) => ({ ...prev, [shopId]: true }));
+    try {
+      await api.connectShop(shopId);
+      toast.success("Connection request sent successfully.");
+    } catch (err) {
+      toast.error(err.message || "Failed to send connection request.");
+    } finally {
+      setConnecting((prev) => ({ ...prev, [shopId]: false }));
+    }
+  };
 
   useEffect(() => {
     const loadDirectory = async () => {
@@ -146,9 +162,13 @@ export default function ShopDirectoryPage() {
                 <span className="rounded-full bg-paper px-3 py-1 text-xs font-medium text-ink/60">
                   {shop.business_category || "General Store"}
                 </span>
-                <button className="inline-flex items-center gap-2 rounded-full bg-shopfront px-4 py-2 text-sm font-semibold text-paper transition-transform hover:-translate-y-0.5">
+                <button
+                  onClick={() => handleConnectShop(shop.id)}
+                  disabled={connecting[shop.id]}
+                  className="inline-flex items-center gap-2 rounded-full bg-shopfront px-4 py-2 text-sm font-semibold text-paper transition-transform hover:-translate-y-0.5 disabled:opacity-50"
+                >
                   <CheckCircle2 className="h-4 w-4" />
-                  Connect Shop
+                  {connecting[shop.id] ? "Connecting…" : "Connect Shop"}
                 </button>
               </div>
             </article>
