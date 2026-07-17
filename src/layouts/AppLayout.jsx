@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { api } from "../lib/api";
 import {
   LayoutDashboard, ShoppingBag, Package, Users, Receipt, PieChart,
-  Target, Mic, Scan, Settings, Info, LogOut, Sparkles
+  Target, Mic, Scan, Settings, Info, LogOut, Sparkles, Store, Bell, BookOpen, History
 } from "lucide-react";
 import { useAuth } from "../lib/auth-context";
 import LanguageSwitcher from "../components/LanguageSwitcher";
@@ -57,10 +57,14 @@ export default function AppLayout() {
 
   const navItems = [
     { name: "Dashboard", path: "/app/dashboard", icon: LayoutDashboard },
+    { name: "Shop Directory", path: "/app/directory", icon: Store },
+    { name: "Notifications", path: "/app/notifications", icon: Bell },
     { name: "Dukaan Saathi AI", path: "/app/ai", icon: Sparkles },
     { name: "Sales", path: "/app/sales", icon: ShoppingBag },
     { name: "Inventory", path: "/app/inventory", icon: Package },
     { name: "Udhaar", path: "/app/udhaar", icon: Users },
+    { name: "Customer Ledger", path: "/app/ledger", icon: BookOpen },
+    { name: "Reminder History", path: "/app/reminders", icon: History },
     { name: "Reports", path: "/app/reports", icon: PieChart },
     { name: "Business Coach", path: "/app/coach", icon: Target },
     { name: "Voice Assistant", path: "/app/voice", icon: Mic },
@@ -80,7 +84,7 @@ export default function AppLayout() {
           <div className="flex items-center gap-3">
             <div className="grid h-8 w-8 place-items-center rounded-xl bg-shopfront text-sm font-bold text-marigold">दु</div>
             <span className="font-display text-lg font-bold tracking-tight text-shopfront">Dukaan Saathi</span>
-          </div>
+          </Link>
         </div>
         
         <div className="px-4 py-4 border-b border-black/5 dark:border-white/5 flex items-center justify-between">
@@ -126,13 +130,16 @@ export default function AppLayout() {
               </Link>
             );
           })}
-          <button
-            onClick={logout}
-            className="group flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-terracotta/80 transition-all hover:bg-terracotta/10 hover:text-terracotta"
-          >
-            <LogOut className="h-4 w-4" />
-            Logout
-          </button>
+            <button
+              onClick={() => {
+                logout();
+                navigate('/login');
+              }}
+              className="group flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-terracotta/80 transition-all hover:bg-terracotta/10 hover:text-terracotta"
+            >
+              <LogOut className="h-4 w-4" />
+              Logout
+            </button>
         </nav>
       </aside>
 
@@ -169,21 +176,18 @@ export default function AppLayout() {
            {navItems.slice(0, 4).map((item) => {
              const isActive = location.pathname === item.path;
              const Icon = item.icon;
+             const shortName = item.name === "Shop Directory" ? "Directory" : item.name === "Dukaan Saathi AI" ? "AI" : item.name.split(" ")[0];
              return (
                <Link
                  key={item.path}
                  to={item.path}
-                 className={`flex flex-col items-center gap-1 p-2 ${isActive ? "text-shopfront" : "text-ink/40"}`}
+                 className={`flex flex-col items-center gap-0.5 px-1 py-1.5 rounded-xl min-w-0 flex-1 ${isActive ? "text-shopfront bg-shopfront/5" : "text-ink/40"}`}
                >
                  <Icon className={`h-5 w-5 ${isActive ? "text-marigold" : ""}`} />
-                 <span className="text-[10px] font-medium">{item.name.split(" ")[0]}</span>
+                 <span className="text-[10px] font-medium truncate w-full text-center leading-tight">{shortName}</span>
                </Link>
              );
            })}
-           <Link to="/app/settings" className={`flex flex-col items-center gap-1 p-2 ${location.pathname.includes('/app/settings') ? "text-shopfront" : "text-ink/40"}`}>
-             <Settings className="h-5 w-5" />
-             <span className="text-[10px] font-medium">More</span>
-           </Link>
         </nav>
       </main>
       <AiChat />

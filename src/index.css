@@ -110,8 +110,15 @@ body {
   filter: blur(6px);
 }
 
+/* improve touch target and tap highlight globally */
 .tap-highlight-none {
   -webkit-tap-highlight-color: transparent;
+}
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+button, a, input, select, textarea {
+  font-size: 16px; /* prevent iOS zoom on focus */
 }
 
 /* thin, warm scrollbar inside chat surfaces */
@@ -121,6 +128,20 @@ body {
 .chat-scroll::-webkit-scrollbar-thumb {
   background: rgba(27, 58, 75, 0.2);
   border-radius: 999px;
+}
+
+/* hide scrollbar for filter strips */
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* safe area padding for notched phones */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 /* ---- Waveform bars (voice note) ------------------------------------------ */
@@ -249,5 +270,48 @@ body {
     animation-duration: 0.001ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
+  }
+}
+
+/* ---- Printing / PDF layout utilities ------------------------------------ */
+@media print {
+  /* Hide standard screen elements */
+  body * {
+    visibility: hidden;
+  }
+  
+  /* Show only the target print statement container */
+  #print-section, #print-section * {
+    visibility: visible;
+  }
+  
+  #print-section {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    background: white !important;
+    color: black !important;
+  }
+
+  /* Force background colors in prints */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+}
+
+/* Hide print layout from standard web view */
+.print-only {
+  display: none;
+}
+
+@media print {
+  .print-only {
+    display: block !important;
   }
 }

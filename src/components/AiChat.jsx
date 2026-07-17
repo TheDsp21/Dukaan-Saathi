@@ -117,7 +117,7 @@ export default function AiChat({ onUpdateDashboard }) {
     return (
       <button 
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 z-50 grid h-14 w-14 place-items-center rounded-full bg-shopfront text-marigold shadow-2xl transition-transform hover:scale-105"
+        className="fixed bottom-20 right-4 sm:bottom-6 sm:right-6 z-50 grid h-14 w-14 place-items-center rounded-full bg-shopfront text-marigold shadow-2xl transition-transform hover:scale-105 active:scale-95"
       >
         <span className="font-display text-2xl font-bold">दु</span>
       </button>

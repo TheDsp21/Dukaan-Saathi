@@ -3,7 +3,7 @@
     "howItWorks": "ఎలా పనిచేస్తుంది",
     "liveDemo": "లైవ్ డెమో",
     "impact": "ప్రభావం",
-    "team": "టీమ్",
+    "team": "అధ్యయనం",
     "seeItLive": "లైవ్ చూడండి",
     "dashboard": "డాష్‌బోర్డ్",
     "simulator": "WhatsApp లో ప్రయత్నించండి",
@@ -182,7 +182,7 @@
   },
   "footer": {
     "tagline": "షాపు యజమాని AI సాథి.",
-    "submission": "హ్యాకథాన్ సబ్మిషన్ · 2026",
+    "submission": "ఆధునిక రిటైల్ ఆపరేషన్ల కోసం రూపొందించబడింది",
     "disclaimer": "React, Tailwind, Express, Claude తో నిర్మించబడింది. వాయిస్ Sarvam AI, WhatsApp Twilio."
   },
   "login": {
@@ -211,7 +211,8 @@
     "newPin": "కొత్త పిన్",
     "or": "లేదా",
     "tryDemo": "లైవ్ డెమో ప్రయత్నించండి (సైన్అప్ అవసరం లేదు)",
-    "demoShopName": "డెమో కిరాణా స్టోర్"
+    "demoShopName": "డెమో కిరాణా స్టోర్",
+    "login_success": "తిరిగి స్వాగతం!"
   },
   "dashboard": {
     "title": "షాప్ డాష్‌బోర్డ్",
@@ -238,6 +239,7 @@
     "qty": "పరిమాణం",
     "amount": "మొత్తం",
     "customer": "వినియోగదారు",
+    "searchCustomer": "పేరు లేదా ఫోన్ నంబర్‌తో వెతకండి...",
     "time": "సమయం",
     "refresh": "రిఫ్రెష్",
     "collectPrompt": "{{name}} నుండి ఎంత డబ్బు వచ్చింది?",

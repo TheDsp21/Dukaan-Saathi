@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Sparkles, ArrowRight } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 
 export default function SplashPage() {
   const [step, setStep] = useState(0);
@@ -9,9 +9,10 @@ export default function SplashPage() {
   const splashKey = "dukaan_splash_seen_v2";
 
   useEffect(() => {
-    // Check if user has already seen the updated splash sequence
+    // Check if user has already seen the splash sequence
     if (localStorage.getItem(splashKey) === "true") {
-      navigate("/onboarding", { replace: true });
+      // Directly show final CTA step
+      setStep(7);
       return;
     }
 
@@ -35,7 +36,7 @@ export default function SplashPage() {
 
   const handleFinish = () => {
     localStorage.setItem(splashKey, "true");
-    navigate("/onboarding");
+    navigate("/login");
   };
 
   return (
@@ -202,8 +203,8 @@ export default function SplashPage() {
                 </button>
                 
                 <div className="text-xs font-medium text-white/40 pt-4">
-                  <p>Team Zero Friction</p>
-                  <p>Building the Future of Kirana Stores</p>
+                  <p>Built for modern retail operations</p>
+                  <p>From manual workflows to intelligent growth</p>
                 </div>
               </motion.div>
             )}

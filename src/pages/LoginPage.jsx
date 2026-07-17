@@ -1,65 +1,152 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Store, ArrowRight, Sparkles, ArrowLeft } from "lucide-react";
+import { Eye, EyeOff, ArrowLeft } from "lucide-react";
 import { api } from "../lib/api";
 import { useAuth } from "../lib/auth-context.js";
 import LanguageSwitcher from "../components/LanguageSwitcher";
+import { useToast } from "../components/Toast";
 import { motion } from "motion/react";
 
 export default function LoginPage() {
   const { t, i18n } = useTranslation();
   const { login } = useAuth();
   const navigate = useNavigate();
-  const [shopName, setShopName] = useState("");
+  const toast = useToast();
+
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
-  const startDemo = async () => {
+  const [googleAuthData, setGoogleAuthData] = useState(null);
+  const [googleShopName, setGoogleShopName] = useState("");
+  const [googlePhone, setGooglePhone] = useState("");
+  const [googleAddress, setGoogleAddress] = useState("");
+
+  const [showMockGoogle, setShowMockGoogle] = useState(false);
+  const [mockEmail, setMockEmail] = useState("google.tester@example.com");
+  const [mockName, setMockName] = useState("Google Tester");
+
+  useEffect(() => {
+    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+    if (clientId && !window.google) {
+      const script = document.createElement("script");
+      script.src = "https://accounts.google.com/gsi/client";
+      script.async = true;
+      script.defer = true;
+      document.body.appendChild(script);
+    }
+  }, []);
+
+  const handleGoogleSignIn = () => {
     setError("");
+    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+    if (clientId) {
+      if (!window.google) {
+        setError("Google authentication client is not loaded. Please try again in a moment.");
+        return;
+      }
+      try {
+        const client = window.google.accounts.oauth2.initTokenClient({
+          client_id: clientId,
+          scope: "https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email",
+          callback: async (tokenResponse) => {
+            if (tokenResponse && tokenResponse.access_token) {
+              await processGoogleAuth({ token: tokenResponse.access_token });
+            }
+          },
+        });
+        client.requestAccessToken();
+      } catch (err) {
+        setError("Failed to initialize Google Sign-in: " + err.message);
+      }
+    } else {
+      setShowMockGoogle(true);
+    }
+  };
+
+  const processGoogleAuth = async (payload) => {
     setBusy(true);
+    setError("");
     try {
-      const number = "+91" + Math.floor(7000000000 + (Date.now() % 2999999999));
-      const lang = i18n.resolvedLanguage?.slice(0, 2) || "en";
-      const res = await api.register({ whatsapp_number: number, name: "Sai Krishna Kirana Store", pin: "1234", lang });
-      login(res.token, res.shop, { persist: true });
-      await api.loadDemo();
-      navigate("/app");
+      const res = await api.googleLogin(payload);
+      if (res.requireAdditionalInfo) {
+        setGoogleAuthData({
+          token: payload.token || "mock-token",
+          email: res.googleUser.email,
+          name: res.googleUser.name,
+        });
+      } else {
+        login(res.token, res.shop, { persist: rememberMe });
+        toast.success(t("auth.login_success", "Welcome back!"));
+        navigate("/app");
+      }
     } catch (err) {
       setError(err.message);
+    } finally {
       setBusy(false);
     }
   };
 
-  const startCustom = async (e) => {
+  const handleMockGoogleSubmit = async (e) => {
     e.preventDefault();
-    if (!shopName.trim()) return;
-    setError("");
+    setShowMockGoogle(false);
+    await processGoogleAuth({
+      token: "mock-token-" + Date.now(),
+      email: mockEmail.trim(),
+      name: mockName.trim(),
+    });
+  };
+
+  const handleCompleteGoogleSetup = async (e) => {
+    e.preventDefault();
+    if (!googleShopName.trim() || !googlePhone.trim() || !googleAddress.trim()) {
+      setError("All setup fields are required");
+      return;
+    }
     setBusy(true);
+    setError("");
     try {
-      // Generate a deterministic fake number for this device to simulate "account creation/login"
-      let storedNumber = localStorage.getItem("dukaan_custom_number");
-      if (!storedNumber) {
-        storedNumber = "+91" + Math.floor(8000000000 + (Date.now() % 1999999999));
-        localStorage.setItem("dukaan_custom_number", storedNumber);
-      }
-      
-      const lang = i18n.resolvedLanguage?.slice(0, 2) || "en";
-      // Try to register. If it conflicts, the user already registered this device, so try to login.
-      let res;
-      try {
-        res = await api.register({ whatsapp_number: storedNumber, name: shopName.trim(), pin: "0000", lang });
-      } catch (regErr) {
-        if (regErr.message.includes("already registered")) {
-          res = await api.login({ whatsapp_number: storedNumber, pin: "0000" });
-        } else {
-          throw regErr;
-        }
-      }
-      login(res.token, res.shop, { persist: true });
+      const res = await api.googleLogin({
+        token: googleAuthData.token,
+        email: googleAuthData.email,
+        name: googleAuthData.name,
+        shop_name: googleShopName.trim(),
+        phone_number: googlePhone.trim(),
+        shop_address: googleAddress.trim(),
+      });
+      login(res.token, res.shop, { persist: rememberMe });
+      toast.success(t("auth.login_success", "Welcome back!"));
       navigate("/app");
     } catch (err) {
       setError(err.message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setError("");
+    if (!username.trim() || !password) {
+      setError(t("common.required_fields", "All fields are required"));
+      return;
+    }
+    setBusy(true);
+    try {
+      console.log("[LOGIN] Sending:", { username: username.trim(), password });
+      const res = await api.login({ username: username.trim(), password });
+      console.log("[LOGIN] Success:", res);
+      login(res.token, res.shop, { persist: rememberMe });
+      toast.success(t("auth.login_success", "Welcome back!"));
+      navigate("/app");
+    } catch (err) {
+      console.error("[LOGIN] Error:", err.message);
+      setError(err.message);
+    } finally {
       setBusy(false);
     }
   };
@@ -69,12 +156,11 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         <div className="mb-8 flex items-center justify-between">
           <Link to="/" className="inline-flex items-center gap-2 text-sm text-ink/60 hover:text-shopfront transition-colors">
-            <ArrowLeft className="h-4 w-4" /> {t("common.backHome")}
+            <ArrowLeft className="h-4 w-4" /> {t("common.backHome", "Back Home")}
           </Link>
           <LanguageSwitcher />
         </div>
-
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="rounded-[2rem] bg-white dark:bg-shopfront p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] ring-1 ring-black/5 dark:ring-white/5 sm:p-10"
@@ -101,11 +187,11 @@ export default function LoginPage() {
             <div className="absolute inset-0 -translate-x-full bg-white dark:bg-shopfront/20 transition-transform duration-500 group-hover:translate-x-full" />
           </button>
 
-          <div className="my-6 flex items-center gap-3 text-xs uppercase tracking-widest text-ink/40">
-            <span className="h-px flex-1 bg-ink/10" />
-            or
-            <span className="h-px flex-1 bg-ink/10" />
-          </div>
+              <div className="relative flex py-2 items-center">
+                <div className="flex-grow border-t border-black/5"></div>
+                <span className="flex-shrink mx-4 text-xs font-semibold text-ink/40 uppercase">or</span>
+                <div className="flex-grow border-t border-black/5"></div>
+              </div>
 
           <form onSubmit={startCustom} className="relative">
             <input
@@ -124,10 +210,17 @@ export default function LoginPage() {
             </button>
           </form>
 
+              <div className="text-center text-sm pt-2">
+                {t("auth.no_account", "Don’t have an account?")} <Link to="/register" className="font-medium text-leaf hover:underline">
+                  {t("auth.register_link", "Register")}
+                </Link>
+              </div>
+            </form>
+          )}
           {error && (
-            <motion.p 
-              initial={{ opacity: 0, height: 0 }} 
-              animate={{ opacity: 1, height: "auto" }} 
+            <motion.p
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
               className="mt-4 rounded-xl bg-terracotta/10 px-4 py-3 text-sm text-terracotta"
             >
               {error}
